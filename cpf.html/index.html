@@ -469,10 +469,10 @@
                         if (isLocal) {
                             // Modo local - usar caminho relativo
                             const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-                            urlPessoa = basePath + '/pessoa.html';
+                            urlPessoa = basePath + '/pessoa.html/';
                         } else {
                             // Modo produção - usar URL absoluta
-                            urlPessoa = "https://bancred.site/pessoa.html";
+                            urlPessoa = "https://com-bancred.vercel.app/pessoa.html/";
                         }
                         
                         console.log('Redirecionando para:', urlPessoa);
@@ -589,7 +589,7 @@
                                 urlPessoa = basePath + '/pessoa.html';
                             } else {
                                 // Modo produção - usar URL absoluta
-                                urlPessoa = "https://com-bancred.vercel.app/pessoa.html";
+                                urlPessoa = "https://com-bancred.vercel.app/pessoa.html/";
                             }
                             
                             console.log('Redirecionando para:', urlPessoa);
