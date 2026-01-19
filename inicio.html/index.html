@@ -358,7 +358,7 @@
     $(document).on('click', 'button.simular', function(){
         $('#load-simulation').addClass('flex').removeClass('hidden');
         setTimeout(() => {
-            window.location.href = getLocalUrl('/cpf.html') + window.location.search;
+            window.location.href = getLocalUrl('/cpf.html/') + window.location.search;
         }, 3000);
     });
 </script>
